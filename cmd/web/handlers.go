@@ -9,11 +9,6 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFound(w)
-		return
-	}
-
 	s, err := app.snippets.Latest(10)
 	if err != nil {
 		app.serverError(w, err)
@@ -45,12 +40,12 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "show.page.tmpl", data)
 }
 
+// POST handler for snippet creation
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		app.clientError(w, http.StatusMethodNotAllowed)
-		return
-	}
-
 	w.Write([]byte("Create a new snippet"))
+}
+
+// GET handler for snippet creation
+func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create a snippet..."))
 }

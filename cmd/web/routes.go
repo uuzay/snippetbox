@@ -3,19 +3,24 @@ package main
 import (
 	"net/http"
 
+	"github.com/bmizerany/pat"
 	"github.com/justinas/alice"
 )
 
 func (app *application) routes() http.Handler {
 	middleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet", app.showSnippet)
-	mux.HandleFunc("/snippet/create", app.createSnippet)
+	mux := pat.New()
+	mux.Get("/", http.HandlerFunc(app.home))
+	mux.Get("/snippet/create", http.HandlerFunc(app.createSnippetForm))
+	mux.Post("/snippet/create", http.HandlerFunc(app.createSnippet))
+
+	// ordering matters for pat
+	// if /snippet/create was after this pattern, it would still get matched to this one
+	mux.Get("/snippet/:id", http.HandlerFunc(app.showSnippet))
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", neuter(fileServer)))
+	mux.Get("/static/", http.StripPrefix("/static", neuter(fileServer)))
 
 	return middleware.Then(mux)
 }
