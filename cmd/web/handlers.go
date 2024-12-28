@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -42,10 +43,26 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 
 // POST handler for snippet creation
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Create a new snippet"))
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+	expires := r.PostForm.Get("expires")
+
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
 
 // GET handler for snippet creation
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Create a snippet..."))
+	app.render(w, r, "create.page.tmpl", nil)
 }
