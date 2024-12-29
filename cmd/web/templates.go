@@ -2,10 +2,10 @@ package main
 
 import (
 	"html/template"
-	"net/url"
 	"path/filepath"
 	"time"
 
+	"github.com/uuzay/snippetbox/pkg/forms"
 	"github.com/uuzay/snippetbox/pkg/models"
 )
 
@@ -19,8 +19,7 @@ var functions = template.FuncMap{
 
 type templateData struct {
 	CurrentYear int
-	FormData    url.Values
-	FormErrors  map[string]string
+	Form        *forms.Form
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
 }
