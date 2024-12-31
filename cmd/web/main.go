@@ -9,8 +9,10 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golangcollege/sessions"
 	"github.com/joho/godotenv"
 	"github.com/uuzay/snippetbox/pkg/models/mysql"
 )
@@ -18,6 +20,7 @@ import (
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
+	session       *sessions.Session
 	snippets      *mysql.SnippetModel
 	templateCache map[string]*template.Template
 }
@@ -37,8 +40,11 @@ func main() {
 
 	dsnDefault := fmt.Sprintf("%v:%v@/%v?parseTime=true", dbUsername, dbPassword, dbName)
 
+	secretDefault := os.Getenv("SECRET_KEY")
+
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	dsn := flag.String("dsn", dsnDefault, "MySQL data source name")
+	secret := flag.String("secret", secretDefault, "Secret key")
 	flag.Parse()
 
 	db, err := openDB(*dsn)
@@ -52,9 +58,13 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+
 	app := &application{
 		infoLog:       infoLog,
 		errorLog:      errorLog,
+		session:       session,
 		snippets:      &mysql.SnippetModel{DB: db},
 		templateCache: templateCache,
 	}
